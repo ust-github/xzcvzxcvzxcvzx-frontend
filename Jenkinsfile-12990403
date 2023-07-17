@@ -1,0 +1,57 @@
+pipeline {
+  agent { label 'chrome' }
+  tools {
+    nodejs 'NodeJS'
+  }
+  stages {
+    stage ('Installing (wxnefw)') {
+      steps {
+        sh script: 'npm install', label: 'r7qc4l'
+      } //end steps
+    } // end stage Installing
+    stage ('Testing (g20iik)') {
+      steps {
+        sh script: 'ng test --browsers ChromeHeadless --code-coverage true --preserve-symlinks false --source-map true --watch false', label: 'ii8non'
+      } //end steps
+    } // end stage Testing
+    stage ('Building (1fq5gs)') {
+      steps {
+        sh script: 'ng build  --aot false --build-optimizer false --common-chunk true --cross-origin none --delete-output-path true --extract-css false --extract-licenses false --fork-type-checker true --named-chunks true --output-hashing none --preserve-symlinks false --prod true --service-worker false --source-map true --stats-json false --subresource-integrity false --vendor-chunk true', label: 'i0f2h3'
+      } //end steps
+    } // end stage Building
+    stage ('Deploy (cr5j7m)') {
+      steps {
+        script {
+		docker.withTool('docker'){
+
+          docker.withRegistry('https://artifactory.dagility.com', 'cacebf1e-b806-43d7-a08e-0b32122840fd'){
+            sh script: '''
+docker build -t artifactory.dagility.com/docker/xzcvzxcvzxcvzx-frontend:latest .
+''', label: 'bdcdeb'
+            sh script: '''
+docker push artifactory.dagility.com/docker/xzcvzxcvzxcvzx-frontend:latest
+''', label: 'dbaafa'
+        		}
+			}
+	}
+script { sh script: 'sleep 0.005', label: '1t2w2u'}
+
+        sh script: 'helm package chart', label: 'yrl20w'
+        withCredentials([usernamePassword(credentialsId: 'cacebf1e-b806-43d7-a08e-0b32122840fd', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+
+        script {
+            sh script: '''
+curl -u$USER:$PASS -T xzcvzxcvzxcvzx-frontend-chart-0.1.0.tgz 'https://artifactory.dagility.com/artifactory/helm-local/xzcvzxcvzxcvzx-frontend-chart-0.1.0.tgz' 
+''', label: 'ffadbd'
+        } // end step group script
+script { sh script: 'sleep 0.005', label: 'icoxs7'}
+} // end step group
+		withCredentials([   usernamePassword(credentialsId: 'cacebf1e-b806-43d7-a08e-0b32122840fd', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+        	sh script: 'helm repo add xzcvzxcvzxcvzx-frontend https://artifactory.dagility.com/artifactory/helm --username $USER --password $PASS', label: 'v8rljh'
+		}
+        sh script: 'helm repo update', label: 'xkb2da'
+        sh script: 'helm upgrade xzcvzxcvzxcvzx-frontend-deployment xzcvzxcvzxcvzx-frontend/xzcvzxcvzxcvzx-frontend-chart --install --values chart-values.yaml --namespace default --set ingress.hosts[0].host=xzcvzxcvzxcvzx-frontend-default.dagility.com', label: 'j0myop'
+      } //end steps
+    } // end stage Deploy
+  }
+}
